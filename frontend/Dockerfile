@@ -1,11 +1,18 @@
-FROM node:20
+FROM node:24-bookworm-slim AS build
 
 WORKDIR /app
 
+COPY package*.json ./
+RUN npm ci
+
 COPY . .
+RUN npm run build && test -d dist
 
-RUN npm install
+FROM nginx:1.27-alpine
 
-EXPOSE 5173
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist /usr/share/nginx/html
 
-CMD ["npm","run","dev","--","--host"]
+EXPOSE 80
+
+CMD ["nginx","-g","daemon off;"]

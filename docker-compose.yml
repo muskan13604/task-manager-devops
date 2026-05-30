@@ -27,7 +27,7 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "5173:5173"
+      - "5173:80"
     depends_on:
       - task-service
       - analytics-service
@@ -60,8 +60,17 @@ services:
     image: postgres:16
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_DB: taskmanager
+      POSTGRES_USER: taskmanager
+      POSTGRES_PASSWORD: taskmanager
 
   pgadmin:
     image: dpage/pgadmin4
     ports:
       - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    depends_on:
+      - postgres
