@@ -8,6 +8,6 @@ public class HealthController {
 
     @GetMapping("/health")
     public String health() {
-        return "Task Manager Backend Running";
+        return "Task Service Running";
     }
 }

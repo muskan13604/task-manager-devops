@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: notification-service
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: notification-service
+
+  template:
+    metadata:
+      labels:
+        app: notification-service
+
+    spec:
+      containers:
+        - name: notification-service
+          image: muskanyadav1/taskmanager-notification:v1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8087
+          env:
+            - name: TASK_SERVICE_URL
+              value: http://task-service:8085/tasks

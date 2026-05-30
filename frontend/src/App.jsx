@@ -2,6 +2,7 @@ import "./App.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertCircle,
+  BellRing,
   CalendarDays,
   Check,
   Circle,
@@ -16,10 +17,22 @@ import {
 
 function App() {
   const apiBaseRef = useRef("");
+  const analyticsBaseRef = useRef("");
+  const notificationBaseRef = useRef("");
   const apiCandidates = useMemo(() => {
     const configuredUrl = import.meta.env.VITE_API_URL;
 
-    return [configuredUrl, "http://localhost:8084/tasks", "http://localhost:8085/tasks"].filter(Boolean);
+    return [configuredUrl, "http://localhost:8085/tasks"].filter(Boolean);
+  }, []);
+  const analyticsCandidates = useMemo(() => {
+    const configuredUrl = import.meta.env.VITE_ANALYTICS_URL;
+
+    return [configuredUrl, "http://localhost:8086/analytics"].filter(Boolean);
+  }, []);
+  const notificationCandidates = useMemo(() => {
+    const configuredUrl = import.meta.env.VITE_NOTIFICATION_URL;
+
+    return [configuredUrl, "http://localhost:8087/notifications"].filter(Boolean);
   }, []);
 
   const [tasks, setTasks] = useState([]);
@@ -32,6 +45,8 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [analyticsSummary, setAnalyticsSummary] = useState(null);
+  const [reminders, setReminders] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState("");
 
@@ -39,27 +54,44 @@ function App() {
     fetchTasks();
   }, []);
 
-  const requestTasks = async (path = "", options = {}) => {
-    const orderedCandidates = apiBaseRef.current
-      ? [apiBaseRef.current, ...apiCandidates.filter((candidate) => candidate !== apiBaseRef.current)]
-      : apiCandidates;
+  const requestFromCandidates = async (baseRef, candidates, path = "", options = {}) => {
+    const orderedCandidates = baseRef.current
+      ? [baseRef.current, ...candidates.filter((candidate) => candidate !== baseRef.current)]
+      : candidates;
 
     for (const baseUrl of orderedCandidates) {
       try {
         const response = await fetch(`${baseUrl}${path}`, options);
 
         if (!response.ok) {
-          throw new Error("Backend response was not ok");
+          throw new Error("Service response was not ok");
         }
 
-        apiBaseRef.current = baseUrl;
+        baseRef.current = baseUrl;
         return response;
       } catch {
-        apiBaseRef.current = "";
+        baseRef.current = "";
       }
     }
 
-    throw new Error("Backend is unavailable");
+    throw new Error("Service is unavailable");
+  };
+
+  const requestTasks = (path = "", options = {}) => requestFromCandidates(apiBaseRef, apiCandidates, path, options);
+
+  const fetchServiceInsights = async () => {
+    const [analyticsResult, notificationResult] = await Promise.allSettled([
+      requestFromCandidates(analyticsBaseRef, analyticsCandidates, "/summary").then((response) => response.json()),
+      requestFromCandidates(notificationBaseRef, notificationCandidates, "/reminders").then((response) => response.json()),
+    ]);
+
+    if (analyticsResult.status === "fulfilled") {
+      setAnalyticsSummary(analyticsResult.value);
+    }
+
+    if (notificationResult.status === "fulfilled") {
+      setReminders(notificationResult.value.messages || []);
+    }
   };
 
   const fetchTasks = async () => {
@@ -68,6 +100,7 @@ function App() {
       const response = await requestTasks();
       const data = await response.json();
       setTasks(data);
+      fetchServiceInsights();
     } catch {
       setError("Backend se connect nahi ho pa raha. Spring Boot server run hona chahiye.");
     } finally {
@@ -157,10 +190,12 @@ function App() {
       .filter((task) => (task.title || "").toLowerCase().includes(search.toLowerCase()));
   }, [tasks, search, filter]);
 
-  const total = tasks.length;
-  const completed = tasks.filter((task) => task.completed).length;
-  const pending = total - completed;
-  const progress = total === 0 ? 0 : Math.round((completed / total) * 100);
+  const localCompleted = tasks.filter((task) => task.completed).length;
+  const total = analyticsSummary?.total ?? tasks.length;
+  const completed = analyticsSummary?.completed ?? localCompleted;
+  const pending = analyticsSummary?.pending ?? total - completed;
+  const progress = analyticsSummary?.progress ?? (total === 0 ? 0 : Math.round((completed / total) * 100));
+  const highPriority = analyticsSummary?.highPriority ?? tasks.filter((task) => task.priority === "High").length;
   const today = new Date().toLocaleDateString("en-IN", {
     day: "2-digit",
     month: "short",
@@ -200,7 +235,7 @@ function App() {
           <article className="summary-card pending-card">
             <span className="summary-label">Pending</span>
             <strong>{pending}</strong>
-            <small>Open work</small>
+            <small>{highPriority} high priority</small>
           </article>
 
           <article className="summary-card done-card">
@@ -279,6 +314,14 @@ function App() {
             ))}
           </div>
         </section>
+
+        {reminders.length > 0 && (
+          <section className="reminder-strip" aria-label="Task reminders">
+            <BellRing size={18} />
+            <span>{reminders[0]}</span>
+            {reminders.length > 1 && <strong>+{reminders.length - 1}</strong>}
+          </section>
+        )}
 
         <section className="task-list">
           {loading ? (

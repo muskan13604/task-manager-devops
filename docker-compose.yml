@@ -1,17 +1,37 @@
 
 services:
 
-  backend:
+  task-service:
     build: ./backend
     ports:
       - "8085:8085"
+
+  analytics-service:
+    build: ./analytics-service
+    ports:
+      - "8086:8086"
+    environment:
+      TASK_SERVICE_URL: http://task-service:8085/tasks
+    depends_on:
+      - task-service
+
+  notification-service:
+    build: ./notification-service
+    ports:
+      - "8087:8087"
+    environment:
+      TASK_SERVICE_URL: http://task-service:8085/tasks
+    depends_on:
+      - task-service
 
   frontend:
     build: ./frontend
     ports:
       - "5173:5173"
     depends_on:
-      - backend
+      - task-service
+      - analytics-service
+      - notification-service
 
   postgres:
     image: postgres:16

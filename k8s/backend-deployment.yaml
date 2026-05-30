@@ -2,23 +2,23 @@ apiVersion: apps/v1
 kind: Deployment
 
 metadata:
-  name: backend
+  name: task-service
 
 spec:
   replicas: 1
 
   selector:
     matchLabels:
-      app: backend
+      app: task-service
 
   template:
     metadata:
       labels:
-        app: backend
+        app: task-service
 
     spec:
       containers:
-        - name: backend
+        - name: task-service
           image: muskanyadav1/taskmanager-backend:v1
           imagePullPolicy: Always
           ports:
