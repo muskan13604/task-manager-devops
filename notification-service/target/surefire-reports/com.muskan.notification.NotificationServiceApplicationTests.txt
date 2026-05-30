@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.muskan.notification.NotificationServiceApplicationTests
 -------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 10.80 s -- in com.muskan.notification.NotificationServiceApplicationTests
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 13.08 s -- in com.muskan.notification.NotificationServiceApplicationTests

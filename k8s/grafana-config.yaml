@@ -1,0 +1,129 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: grafana-provisioning
+
+data:
+  datasource.yml: |
+    apiVersion: 1
+
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus:9090
+        isDefault: true
+        editable: true
+
+  dashboards.yml: |
+    apiVersion: 1
+
+    providers:
+      - name: Task Manager Dashboards
+        type: file
+        disableDeletion: false
+        updateIntervalSeconds: 30
+        options:
+          path: /etc/grafana/provisioning/dashboards
+
+  task-manager-dashboard.json: |
+    {
+      "annotations": {
+        "list": []
+      },
+      "editable": true,
+      "panels": [
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 0
+          },
+          "id": 1,
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "expr": "up",
+              "legendFormat": "{{job}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Service Health",
+          "type": "stat"
+        },
+        {
+          "datasource": "Prometheus",
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 0
+          },
+          "id": 2,
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "expr": "sum by (application) (rate(http_server_requests_seconds_count[1m]))",
+              "legendFormat": "{{application}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Requests Per Second",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 0
+          },
+          "id": 3,
+          "targets": [
+            {
+              "datasource": "Prometheus",
+              "expr": "sum by (application) (jvm_memory_used_bytes)",
+              "legendFormat": "{{application}}",
+              "refId": "A"
+            }
+          ],
+          "title": "JVM Memory Used",
+          "type": "timeseries"
+        }
+      ],
+      "refresh": "10s",
+      "schemaVersion": 40,
+      "tags": [
+        "task-manager",
+        "microservices"
+      ],
+      "time": {
+        "from": "now-15m",
+        "to": "now"
+      },
+      "timezone": "browser",
+      "title": "Task Manager Microservices",
+      "uid": "task-manager-microservices",
+      "version": 1
+    }
