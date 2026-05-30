@@ -25,6 +25,24 @@ public class TaskController {
         return repository.save(task);
     }
 
+    @PutMapping("/{id}")
+    public Task updateTask(
+            @PathVariable Long id,
+            @RequestBody Task updatedTask
+    ) {
+
+        Task task = repository.findById(id)
+                .orElseThrow();
+
+        task.setTitle(updatedTask.getTitle());
+        task.setDate(updatedTask.getDate());
+        task.setTime(updatedTask.getTime());
+        task.setPriority(updatedTask.getPriority());
+        task.setCompleted(updatedTask.isCompleted());
+
+        return repository.save(task);
+    }
+
     @DeleteMapping("/{id}")
     public void deleteTask(@PathVariable Long id) {
         repository.deleteById(id);

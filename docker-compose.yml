@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+
   backend:
     build: ./backend
     ports:
@@ -12,3 +13,13 @@ services:
       - "5173:5173"
     depends_on:
       - backend
+
+  postgres:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - "5050:80"
