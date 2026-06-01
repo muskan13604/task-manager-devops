@@ -34,9 +34,9 @@ jobs:
           cd frontend
           npm install
           npm run build
-          
-        - name: Build Docker Image
-  run: docker build -t muskanyadav1/task-manager:latest .
 
-- name: Push Docker Image
-  run: docker push muskanyadav1/task-manager:latest
+        - name: Build Docker Image
+          run: docker build -t muskanyadav1/task-manager:latest .
+
+        - name: Push Docker Image
+          run: docker push muskanyadav1/task-manager:latest
