@@ -12,7 +12,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Print Message
-        run: echo "Pipeline executed successfully"
+        run: echo "Pipeline donee"
+
+      - name: Show Current Directory
+        run: pwd
 
       - name: Show Date
         run: date
